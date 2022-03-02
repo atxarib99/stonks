@@ -9,4 +9,5 @@ my goals are not to turn this into a formal library of any sort.
 - [ ] build visualizations
 - [ ] write some analysis
 - [ ] understand ML pipelines/distribution methods
-- [ ] make sick stock gainz
+- [ ] make sick stock gainz (jk)
+- [ ] apply it to the kaggle competition?
