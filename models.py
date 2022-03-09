@@ -45,15 +45,15 @@ def singleHighOutput(data, lstm_layer_size=128, lstm_layer_count=2):
 
     return (model, train_x, train_y, valid_x, valid_y, test_x, test_y)
 
-def next5HighOutput(data, lstm_layer_size=64, lstm_layer_count=4):
+def next5HighOutput(data, lstm_layer_size=64, lstm_layer_count=4, prev_days=30):
     dataset_x = []
     dataset_y = []
 
     train_x = []
     train_y = []
 
-    for i in range(30, len(data) - 5):
-        dataset_x.append(data[i-30:i])
+    for i in range(prev_days, len(data) - 5):
+        dataset_x.append(data[i-prev_days:i])
         dataset_y.append([row[0] for row in data[i+1:i+6]])
     
     train_x, train_y, valid_x, valid_y, test_x, test_y = splitdata(dataset_x, dataset_y, [.8,0,.2])
@@ -73,9 +73,9 @@ def next5HighOutput(data, lstm_layer_size=64, lstm_layer_count=4):
 
     for i in range(0, lstm_layer_count):
         if i != lstm_layer_count - 1:
-            layers.append(tf.keras.layers.LSTM(lstm_layer_size, return_sequences=True, input_shape=(30,6), kernel_initializer='glorot_uniform')) 
+            layers.append(tf.keras.layers.LSTM(lstm_layer_size, return_sequences=True, input_shape=(prev_days,6), kernel_initializer='glorot_uniform')) 
         else:
-            layers.append(tf.keras.layers.LSTM(lstm_layer_size, return_sequences=False, input_shape=(30,6), kernel_initializer='glorot_uniform'))
+            layers.append(tf.keras.layers.LSTM(lstm_layer_size, return_sequences=False, input_shape=(prev_days,6), kernel_initializer='glorot_uniform'))
         layers.append(tf.keras.layers.Dropout(.3))
         
     layers.append(tf.keras.layers.Dense(125, kernel_initializer='glorot_uniform'))

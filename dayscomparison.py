@@ -36,45 +36,48 @@ for i in range(1,int(len(lines))):
 
 import models
 
+final_errors = {}
 
-get_model = getattr(models, sys.argv[2])
-model, train_x, train_y, valid_x, valid_y, test_x, test_y = get_model(data)
+for prev_days in range(5,15):
+    
+    #get_model = getattr(models, sys.argv[2])
+    #model, train_x, train_y, valid_x, valid_y, test_x, test_y = get_model(data)
 
-#model, train_x, train_y, valid_x, valid_y, test_x, test_y = models.singleHighOutput(data, lstm_layer_size=512, lstm_layer_count=3)
-#model, train_x, train_y, valid_x, valid_y, test_x, test_y = models.next1AllOutput(data)
-#model, train_x, train_y, valid_x, valid_y, test_x, test_y = models.next5HighOutput(data, lstm_layer_size=64, lstm_layer_count=4, prev_days=prev_days)
+    #model, train_x, train_y, valid_x, valid_y, test_x, test_y = models.singleHighOutput(data, lstm_layer_size=512, lstm_layer_count=3)
+    #model, train_x, train_y, valid_x, valid_y, test_x, test_y = models.next1AllOutput(data)
+    model, train_x, train_y, valid_x, valid_y, test_x, test_y = models.next5HighOutput(data, lstm_layer_size=64, lstm_layer_count=4, prev_days=prev_days)
 
-def loss(labels, logits):
-    return tf.keras.losses.mse(labels, logits)
+    def loss(labels, logits):
+        return tf.keras.losses.mse(labels, logits)
 
-model.compile(optimizer=tf.keras.optimizers.Adam(), loss=loss)
+    model.compile(optimizer=tf.keras.optimizers.Adam(), loss=loss)
 
-print(model.summary())
+    epochs = None
 
-epochs = None
+    try:
+        epochs = int(sys.argv[1])
+    except IndexError:
+        epochs = 10
 
-try:
-    epochs = int(sys.argv[1])
-except IndexError:
-    epochs = 10
+    history = model.fit(train_x, train_y, epochs=epochs, batch_size=4)
 
-history = model.fit(train_x, train_y, epochs=epochs, batch_size=4)
+    #test_case = test_x[0]
 
-#test_case = test_x[0]
+    #test_case = np.reshape(test_case, (1, test_x.shape[1], test_x.shape[2]))
 
-#test_case = np.reshape(test_case, (1, test_x.shape[1], test_x.shape[2]))
+    self_error = 0
+    count = 0
 
-self_error = 0
-count = 0
+    test_predictions = model.predict(test_x)
+    for i in range(0, len(test_predictions)):
+        self_error += abs(test_predictions[i] - test_y[i])
+        count+=1
+        #print(test_predictions[i], '-', test_y[i])
 
-test_predictions = model.predict(test_x)
-for i in range(0, len(test_predictions)):
-    self_error += abs(test_predictions[i] - test_y[i])
-    count+=1
-    #print(test_predictions[i], '-', test_y[i])
-
-print('final error', str(self_error/count))
-print(history.history)
+    print('prev_days', str(prev_days))
+    #print('final error', str(self_error/count))
+    final_errors[prev_days] = history.history['loss'][-1]
+    print(history.history)
 
 
 #grab random 30 day splice
@@ -132,5 +135,16 @@ def predict5With1():
     ax.plot(guessed, color='tab:orange')
     plt.show()
 
+def buildErrorByDays():
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    x = []
+    y = []
+    for prev_days in sorted(list(final_errors.keys())):
+        x.append(prev_days)
+        y.append(final_errors[prev_days])
+    ax.plot(x, y)
+    plt.show()
+
 #add logic here but for now its hard coded
-predict5With1()
+buildErrorByDays()
